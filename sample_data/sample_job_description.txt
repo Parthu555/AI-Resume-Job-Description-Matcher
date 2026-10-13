@@ -1,0 +1,29 @@
+Job Title: Senior Python / AI Engineer
+Location: Remote (US / Global)
+Department: Engineering
+
+About the Role:
+We are looking for an experienced Senior Python / AI Engineer to join our core AI platform team. You will design, build, and deploy high-performance backend microservices and machine learning pipelines that power our intelligent enterprise analytics solutions.
+
+Key Responsibilities:
+- Design, develop, and maintain robust REST APIs and asynchronous backend services using FastAPI and Python.
+- Build and evaluate NLP models, semantic search workflows, and text classification systems using scikit-learn, PyTorch, and Sentence Transformers.
+- Work closely with data engineering teams to process high-volume datasets using Pandas, NumPy, and PostgreSQL.
+- Architect scalable cloud deployments on AWS leveraging Docker, Kubernetes, and GitHub Actions CI/CD pipelines.
+- Write clean, modular, and well-tested code with high test coverage using pytest.
+- Mentor junior engineers and collaborate with product managers to deliver explainable AI features.
+
+Required Qualifications & Skills:
+- 3+ years of professional software engineering experience with Python.
+- Proven expertise in modern backend web frameworks (FastAPI, Django, or Flask) and RESTful API design.
+- Hands-on experience with Natural Language Processing (NLP), semantic similarity, or machine learning pipelines (scikit-learn, PyTorch, or Hugging Face transformers).
+- Proficiency with relational databases such as PostgreSQL or MySQL, including query optimization.
+- Solid experience with containerization using Docker and version control using Git.
+- Demonstrated knowledge of core computer science fundamentals: data structures, algorithms, testing, and debugging.
+- Bachelor's or Master's degree in Computer Science, Software Engineering, Data Science, or equivalent practical experience.
+
+Preferred / Nice-to-Have Skills:
+- Experience deploying ML models to AWS (EC2, S3, ECS, Lambda, CloudWatch).
+- Familiarity with frontend frameworks such as React or TypeScript, or dashboard tools like Streamlit.
+- Knowledge of vector search databases, semantic retrieval, or LLM fine-tuning techniques.
+- Experience with infrastructure as code using Terraform and CI/CD automation via GitHub Actions.
