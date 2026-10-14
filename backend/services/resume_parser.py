@@ -5,10 +5,14 @@ import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional, Tuple
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz  # PyMuPDF modern import
     PYMUPDF_AVAILABLE = True
 except ImportError:
-    PYMUPDF_AVAILABLE = False
+    try:
+        import fitz
+        PYMUPDF_AVAILABLE = True
+    except ImportError:
+        PYMUPDF_AVAILABLE = False
 
 try:
     import pypdf

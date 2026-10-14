@@ -10,11 +10,33 @@ logger = logging.getLogger(__name__)
 _CACHED_MODEL = None
 _MODEL_LOAD_ATTEMPTED = False
 _MODEL_LOAD_ERROR = None
+_MODEL_IS_INITIALIZING = False
 
 
 def is_model_loaded() -> bool:
     """Returns True if the embedding model is already loaded in memory."""
     return _CACHED_MODEL is not None
+
+
+def is_model_initializing() -> bool:
+    """Returns True if the embedding model is currently being loaded in the background."""
+    return _MODEL_IS_INITIALIZING
+
+
+def get_model_load_error() -> Optional[str]:
+    """Returns the error string if embedding model loading failed, else None."""
+    return _MODEL_LOAD_ERROR
+
+
+def get_model_status() -> str:
+    """Returns current status: 'ready', 'initializing', 'fallback', or 'not_loaded'."""
+    if _CACHED_MODEL is not None:
+        return "ready"
+    if _MODEL_IS_INITIALIZING:
+        return "initializing"
+    if _MODEL_LOAD_ERROR is not None:
+        return "fallback"
+    return "not_loaded"
 
 
 def get_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-v2", allow_blocking: bool = False):
@@ -23,7 +45,7 @@ def get_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-v
     If allow_blocking is False and model is not yet loaded into memory,
     returns None immediately so that requests utilize TF-IDF fallback without hanging.
     """
-    global _CACHED_MODEL, _MODEL_LOAD_ATTEMPTED, _MODEL_LOAD_ERROR
+    global _CACHED_MODEL, _MODEL_LOAD_ATTEMPTED, _MODEL_LOAD_ERROR, _MODEL_IS_INITIALIZING
     if _CACHED_MODEL is not None:
         return _CACHED_MODEL
     
@@ -34,16 +56,20 @@ def get_embedding_model(model_name: str = "sentence-transformers/all-MiniLM-L6-v
         return None
 
     _MODEL_LOAD_ATTEMPTED = True
+    _MODEL_IS_INITIALIZING = True
     try:
         from sentence_transformers import SentenceTransformer
         logger.info(f"Loading embedding model: {model_name}...")
         _CACHED_MODEL = SentenceTransformer(model_name)
         logger.info("Embedding model loaded successfully.")
+        _MODEL_LOAD_ERROR = None
         return _CACHED_MODEL
     except Exception as e:
         _MODEL_LOAD_ERROR = str(e)
         logger.error(f"Failed to load SentenceTransformer ({model_name}): {e}")
         return None
+    finally:
+        _MODEL_IS_INITIALIZING = False
 
 
 class SimilarityEngine:

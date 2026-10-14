@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # Backend URL configuration
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
 
 # Custom CSS for modern SaaS aesthetic
 CUSTOM_CSS = """
@@ -157,15 +157,20 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
+@st.cache_data(ttl=3)
 def check_backend_health():
-    """Checks FastAPI backend availability and model status."""
+    """Checks FastAPI backend availability and model status, returning (result_dict, error_message)."""
     try:
-        resp = requests.get(f"{BACKEND_URL}/health", timeout=3)
+        resp = requests.get(f"{BACKEND_URL}/health", timeout=2.5)
         if resp.status_code == 200:
-            return resp.json()
-        return None
-    except Exception:
-        return None
+            return resp.json(), None
+        return None, f"Server returned HTTP {resp.status_code}: {resp.text[:80]}"
+    except requests.exceptions.ConnectionError:
+        return None, f"Connection refused at `{BACKEND_URL}`. Ensure FastAPI backend is running."
+    except requests.exceptions.Timeout:
+        return None, f"Connection timed out at `{BACKEND_URL}`."
+    except Exception as e:
+        return None, str(e)
 
 
 # ==========================================
@@ -176,13 +181,22 @@ with st.sidebar:
     st.markdown("Evaluate and optimize your resume against real job requirements using explainable NLP.")
     
     # Backend Status Badge
-    health = check_backend_health()
-    if health and health.get("status") in ["healthy", "degraded"]:
-        status_color = "🟢" if health.get("status") == "healthy" else "🟡"
-        model_state = "Model Active" if health.get("model_loaded") else "TF-IDF Fallback"
-        st.success(f"{status_color} **Backend Connected** ({model_state})")
+    health, health_err = check_backend_health()
+    if health and health.get("status") in ["healthy", "degraded", "initializing"]:
+        if health.get("status") == "healthy":
+            status_icon = "🟢"
+            model_state = "Model Active"
+        elif health.get("status") == "initializing":
+            status_icon = "🔄"
+            model_state = "Model Initializing"
+        else:
+            status_icon = "🟡"
+            model_state = "TF-IDF Fallback Active"
+        st.success(f"{status_icon} **Backend Connected** ({model_state})")
+        if health.get("model_error"):
+            st.caption(f"ℹ️ Model notice: {health.get('model_error')}")
     else:
-        st.error("🔴 **Backend Offline**\n\nEnsure FastAPI is running at `http://127.0.0.1:8000`.")
+        st.error(f"🔴 **Backend Offline**\n\n{health_err or 'Could not connect to ' + BACKEND_URL}\n\nEnsure FastAPI is running with `python run.py`.")
 
     st.markdown("---")
     st.markdown("#### 📋 How to Use")
@@ -327,6 +341,8 @@ if analyze_clicked:
                     f"❌ Unable to connect to backend server at `{BACKEND_URL}`. "
                     "Please ensure FastAPI is started with `python run.py` or `uvicorn backend.main:app`."
                 )
+            except requests.exceptions.Timeout:
+                st.error(f"❌ Request timed out (90s). The backend took too long to complete the analysis.")
             except Exception as e:
                 st.error(f"❌ An error occurred during analysis: {str(e)}")
 

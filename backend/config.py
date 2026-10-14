@@ -1,7 +1,8 @@
 import os
-from typing import List
+import json
+from typing import List, Any, Union
 from pydantic_settings import BaseSettings
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 
 class Settings(BaseSettings):
     app_name: str = "AI Resume & Job Description Matcher"
@@ -11,7 +12,9 @@ class Settings(BaseSettings):
     # Server & Network
     host: str = "127.0.0.1"
     port: int = 8000
-    cors_origins: List[str] = [
+    backend_url: str = "http://127.0.0.1:8000"
+    frontend_port: int = 8501
+    cors_origins: Union[List[str], str] = [
         "http://localhost:8501",
         "http://127.0.0.1:8501",
         "http://localhost:3000"
@@ -19,7 +22,7 @@ class Settings(BaseSettings):
     
     # File Upload Restrictions
     max_upload_size_mb: int = 5
-    allowed_extensions: List[str] = [".pdf", ".docx"]
+    allowed_extensions: Union[List[str], str] = [".pdf", ".docx"]
     min_extracted_text_chars: int = 50
     
     # Embedding Model
@@ -32,4 +35,39 @@ class Settings(BaseSettings):
     
     model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    @field_validator("cors_origins")
+    @classmethod
+    def parse_cors_origins(cls, v: Any) -> List[str]:
+        if isinstance(v, list):
+            return [str(item).strip() for item in v if str(item).strip()]
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
+
+    @field_validator("allowed_extensions")
+    @classmethod
+    def parse_allowed_extensions(cls, v: Any) -> List[str]:
+        if isinstance(v, list):
+            return [str(item).strip() for item in v if str(item).strip()]
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
+
 settings = Settings()
+

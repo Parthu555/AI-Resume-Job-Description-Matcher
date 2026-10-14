@@ -51,6 +51,9 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Service status ('healthy' or 'degraded')")
     model_loaded: bool = Field(..., description="Whether embedding model is loaded into memory")
     model_name: str = Field(..., description="Loaded embedding model identifier")
+    model_status: str = Field(default="ready", description="Status of embedding model ('ready', 'initializing', 'fallback', 'not_loaded')")
+    model_error: Optional[str] = Field(default=None, description="Details if embedding model loading failed")
+    fallback_active: bool = Field(default=False, description="Whether TF-IDF cosine similarity fallback is active")
     supported_formats: List[str] = Field(..., description="File formats supported for upload")
 
 class ResumeExtractResponse(BaseModel):

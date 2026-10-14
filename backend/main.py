@@ -5,7 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .schemas.analysis import HealthResponse
 from .routes.analyze import router as analyze_router
-from .services.similarity_engine import get_embedding_model, is_model_loaded
+from .services.similarity_engine import (
+    get_embedding_model,
+    is_model_loaded,
+    is_model_initializing,
+    get_model_load_error,
+    get_model_status
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -74,9 +80,14 @@ async def root_endpoint():
 async def health_endpoint():
     """Returns service health, model readiness, and configuration parameters."""
     model_loaded = is_model_loaded()
+    model_status = get_model_status()
+    model_error = get_model_load_error()
     return HealthResponse(
         status="healthy" if model_loaded else "degraded",
         model_loaded=model_loaded,
+        model_status=model_status,
         model_name=settings.embedding_model_name,
+        model_error=model_error,
+        fallback_active=not model_loaded,
         supported_formats=["PDF (.pdf)", "Word (.docx)"]
     )
